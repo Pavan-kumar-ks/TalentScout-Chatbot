@@ -1,0 +1,32 @@
+[
+    {
+        "name": "hi",
+        "email": "p@gmail.com",
+        "phone": "+16525125412542",
+        "experience": "1",
+        "position": "python developer",
+        "location": "Bengaluru",
+        "tech_stack": "java",
+        "final_score": 5
+    },
+    {
+        "name": "pavan",
+        "email": "pavan@gmail.com",
+        "phone": "+123256265523",
+        "experience": "2",
+        "position": "GenAI Engineer",
+        "location": "Bengaluru",
+        "tech_stack": "Artificial",
+        "final_score": 3
+    },
+    {
+        "name": "pavan",
+        "email": "pavan@gmail.com",
+        "phone": "+123256265523",
+        "experience": "2",
+        "position": "GenAI Engineer",
+        "location": "Bengaluru",
+        "tech_stack": "Artificial",
+        "final_score": 3
+    }
+]

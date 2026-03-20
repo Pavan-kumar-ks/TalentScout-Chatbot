@@ -1,112 +1,150 @@
-# import streamlit as st
-# from chatbot.state_manager import initialize_state, get_next_step
-# import sys
-# import os
-
-# sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-# # Page config
-# st.set_page_config(page_title="TalentScout Hiring Assistant")
-# st.title("🤖 TalentScout Hiring Assistant")
-
-# # Initialize session state
-# if "chat_state" not in st.session_state:
-#     st.session_state.chat_state = initialize_state()
-
-# if "messages" not in st.session_state:
-#     st.session_state.messages = []
-
-# # User input
-# user_input = st.chat_input("Type your response...")
-
-# if user_input:
-#     # Store user message
-#     st.session_state.messages.append({
-#         "role": "user",
-#         "content": user_input
-#     })
-
-#     # Get chatbot response
-#     response = get_next_step(st.session_state.chat_state, user_input)
-
-#     # Store bot response
-#     st.session_state.messages.append({
-#         "role": "assistant",
-#         "content": response
-#     })
-
-# # Display chat history (AFTER updating messages)
-# for msg in st.session_state.messages:
-#     with st.chat_message(msg["role"]):
-#         st.write(msg["content"])
-
-
-
-
-
 import streamlit as st
 import sys, os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from chatbot.state_manager import initialize_state, get_next_step
 
-# Page config
-st.set_page_config(page_title="TalentScout AI", page_icon="🤖", layout="wide")
+# =========================
+# PAGE CONFIG
+# =========================
+st.set_page_config(
+    page_title="TalentScout AI",
+    page_icon="🤖",
+    layout="wide"
+)
 
-# Custom CSS
+# =========================
+# CUSTOM CSS (🔥 MODERN UI)
+# =========================
 st.markdown("""
 <style>
-.chat-container {
-    max-width: 800px;
-    margin: auto;
+
+/* Background Gradient */
+.stApp {
+    background: linear-gradient(135deg, #1f4037, #99f2c8);
+    color: white;
 }
-.big-title {
-    font-size: 36px;
-    font-weight: bold;
+
+/* Title */
+.title {
     text-align: center;
+    font-size: 42px;
+    font-weight: bold;
+    margin-bottom: 5px;
 }
+
 .subtitle {
     text-align: center;
-    color: gray;
+    color: #e0e0e0;
+    margin-bottom: 30px;
 }
+
+/* Chat bubbles */
+.user-bubble {
+    background: #4CAF50;
+    padding: 12px 16px;
+    border-radius: 15px;
+    margin: 5px 0;
+    color: white;
+}
+
+.bot-bubble {
+    background: rgba(255,255,255,0.1);
+    padding: 12px 16px;
+    border-radius: 15px;
+    margin: 5px 0;
+    backdrop-filter: blur(10px);
+}
+
+/* Sidebar */
+.css-1d391kg {
+    background: rgba(0,0,0,0.2);
+}
+
+/* Buttons */
+.stButton button {
+    border-radius: 10px;
+    background: #00c6ff;
+    color: white;
+}
+
+/* Progress bar */
+.stProgress > div > div {
+    background-color: #00ffcc;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# Header
-st.markdown('<div class="big-title">🤖 TalentScout AI Interviewer</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Smart Hiring Assistant powered by LLM</div>', unsafe_allow_html=True)
+# =========================
+# HEADER
+# =========================
+st.markdown('<div class="title">🤖 TalentScout AI</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Next-Gen Intelligent Hiring Assistant</div>', unsafe_allow_html=True)
 
-# Sidebar
+# =========================
+# SIDEBAR (COOL DASHBOARD)
+# =========================
 with st.sidebar:
-    st.header("⚙️ About")
-    st.write("""
-    This AI assistant:
-    - Collects candidate details
-    - Conducts technical interview
-    - Evaluates answers in real-time
-    """)
-    st.divider()
-    st.write("💡 Type 'exit' anytime to quit")
+    st.header("📊 Dashboard")
 
-# Init state
+    if "chat_state" in st.session_state:
+        progress = st.session_state.chat_state.get("current_question_index", 0)
+        st.metric("Questions Completed", progress)
+
+    st.divider()
+
+    st.markdown("### ⚙️ Controls")
+
+    if st.button("🔄 Restart Interview"):
+        st.session_state.clear()
+        st.rerun()
+
+    st.divider()
+
+    st.markdown("### ℹ️ About")
+    st.write("""
+    AI-powered hiring assistant that:
+    - Conducts technical interviews  
+    - Evaluates answers  
+    - Generates follow-ups  
+    """)
+
+# =========================
+# INIT STATE
+# =========================
 if "chat_state" not in st.session_state:
     st.session_state.chat_state = initialize_state()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Intro message
+# =========================
+# INTRO MESSAGE (NO BLANK SCREEN)
+# =========================
 if len(st.session_state.messages) == 0:
     intro = get_next_step(st.session_state.chat_state, "")
     st.session_state.messages.append({"role": "assistant", "content": intro})
 
-# Chat container
-with st.container():
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+# =========================
+# PROGRESS BAR
+# =========================
+progress = st.session_state.chat_state.get("current_question_index", 0)
+st.progress(min(progress / 4, 1.0))
 
-# Input box
-user_input = st.chat_input("💬 Type your response here...")
+# =========================
+# CHAT DISPLAY (STYLED)
+# =========================
+for msg in st.session_state.messages:
+    if msg["role"] == "user":
+        st.markdown(f'<div class="user-bubble">🧑 {msg["content"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="bot-bubble">🤖 {msg["content"]}</div>', unsafe_allow_html=True)
+
+# =========================
+# INPUT
+# =========================
+user_input = st.chat_input("💬 Type your answer here...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})

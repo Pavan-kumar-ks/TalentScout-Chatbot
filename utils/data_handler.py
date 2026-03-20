@@ -21,7 +21,7 @@ def save_candidate(candidate_data):
         with open(FILE_PATH, "w") as f:
             json.dump(data, f, indent=4)
 
-        print("✅ Candidate saved successfully!")
+        print("✅ Candidate saved!")
 
     except Exception as e:
-        print("❌ Error saving candidate:", e)
+        print("❌ Error:", e)

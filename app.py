@@ -104,15 +104,21 @@ html, body, [class*="css"] {
     margin: 0.65rem 0 0.2rem 0;
     font-family: 'Space Grotesk', sans-serif;
     font-size: clamp(1.7rem, 2.7vw, 2.35rem);
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.15;
     color: #0b253f;
+    background: linear-gradient(100deg, #0b253f 0%, #0f766e 55%, #f97316 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 6px 24px rgba(15, 118, 110, 0.15);
 }
 
 .hero-subtitle {
     margin: 0;
     color: var(--muted);
-    font-size: 0.98rem;
+    font-size: 1.02rem;
+    max-width: 760px;
 }
 
 .metrics {
@@ -353,8 +359,8 @@ default_language_label = next(
 )
 
 ui_copy_en = {
-    "title": "TalentScout Interview Studio",
-    "subtitle": "Smart technical screening with multilingual candidate experience",
+    "title": "TalentScout Pulse",
+    "subtitle": "Smart interviews. Sharp signals.",
     "dashboard": "Interview Controls",
     "language": "Interview Language",
     "language_help": "Choose language before interview starts.",
@@ -368,7 +374,7 @@ ui_copy_en = {
     ),
     "chat_placeholder": "Type your response...",
     "language_locked": "Language is locked for this session. Start a new interview to switch.",
-    "badge": "Live Hiring Session",
+    "badge": "Hire Better, Faster",
     "progress": "Progress",
     "status": "Status",
     "status_value_active": "In Progress",

@@ -193,53 +193,34 @@ html, body, [class*="css"] {
 }
 
 [data-testid="stChatInput"] {
-    border: 2px solid rgba(15, 118, 110, 0.42);
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.16);
-    background: #ffffff !important;
-    overflow: hidden;
-}
-
-[data-testid="stChatInput"] form,
-[data-testid="stChatInput"] > div,
-[data-testid="stChatInput"] > div > div,
-[data-testid="stChatInput"] [data-baseweb="textarea"],
-[data-testid="stChatInput"] [data-baseweb="base-input"],
-[data-testid="stChatInput"] textarea,
-[data-testid="stChatInput"] input {
-    background: #ffffff !important;
-    color: #102a43 !important;
-    -webkit-text-fill-color: #102a43 !important;
-    caret-color: #0f766e !important;
-    opacity: 1 !important;
-    text-shadow: none !important;
-}
-
-[data-testid="stChatInput"] * {
-    color: #102a43 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 [data-testid="stChatInput"] textarea,
 [data-testid="stChatInput"] input,
-[data-testid="stChatInput"] [contenteditable="true"] {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    line-height: 1.35 !important;
+[data-testid="stChatInput"] [contenteditable="true"],
+[data-testid="stChatInput"] [data-baseweb="textarea"],
+[data-testid="stChatInput"] [data-baseweb="base-input"] {
+    color: #102a43 !important;
     -webkit-text-fill-color: #102a43 !important;
-}
-
-[data-testid="stChatInput"] textarea::placeholder {
-    color: #56738a !important;
+    caret-color: #0f766e !important;
     opacity: 1 !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+    font-size: 1rem !important;
 }
 
+[data-testid="stChatInput"] textarea::placeholder,
 [data-testid="stChatInput"] input::placeholder {
     color: #56738a !important;
     opacity: 1 !important;
 }
 
 [data-testid="stChatInput"] input:-webkit-autofill,
-[data-testid="stChatInput"] textarea:-webkit-autofill {
+[data-testid="stChatInput"] textarea:-webkit-autofill,
+[data-testid="stChatInput"] input:-internal-autofill-selected {
     -webkit-text-fill-color: #102a43 !important;
     box-shadow: 0 0 0 1000px #ffffff inset !important;
 }

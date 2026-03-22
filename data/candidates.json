@@ -122,5 +122,33 @@
         "location_en": "bengaluru",
         "tech_stack_en": "python",
         "final_score": 6
+    },
+    {
+        "name": "pavan",
+        "email": "abc@gmail.com",
+        "phone": "+91456123987",
+        "experience": "1",
+        "position": "AI Engineer",
+        "location": "Bengaluru",
+        "tech_stack": "AI",
+        "language": "en",
+        "position_en": "AI Engineer",
+        "location_en": "Bengaluru",
+        "tech_stack_en": "AI",
+        "final_score": 2
+    },
+    {
+        "name": "pavan",
+        "email": "abc@gmail.com",
+        "phone": "+91456123987",
+        "experience": "1",
+        "position": "AI Engineer",
+        "location": "Bengaluru",
+        "tech_stack": "AI",
+        "language": "en",
+        "position_en": "AI Engineer",
+        "location_en": "Bengaluru",
+        "tech_stack_en": "AI",
+        "final_score": 2
     }
 ]

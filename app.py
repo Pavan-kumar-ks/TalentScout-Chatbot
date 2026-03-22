@@ -152,36 +152,56 @@ html, body, [class*="css"] {
 
 .chat-wrap {
     padding: 0 1.2rem 5.6rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.msg-row {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.msg-row.bot {
+    justify-content: flex-start;
+}
+
+.msg-row.user {
+    justify-content: flex-end;
 }
 
 .msg {
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 0.82rem 0.95rem 0.9rem 0.95rem;
-    margin-top: 0.7rem;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    box-shadow: 0 8px 20px rgba(15, 118, 110, 0.06);
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    border-radius: 18px;
+    padding: 0.56rem 0.72rem 0.62rem 0.72rem;
+    line-height: 1.4;
+    box-shadow: 0 6px 16px rgba(15, 118, 110, 0.08);
     animation: fadeSlide 260ms ease-out;
     position: relative;
     overflow: hidden;
+    width: auto;
+    max-width: min(72%, 560px);
+    word-break: break-word;
 }
 
 .msg.bot {
-    background: rgba(240, 253, 250, 0.86);
+    background: rgba(240, 253, 250, 0.92);
+    border-radius: 18px 18px 18px 8px;
 }
 
 .msg.user {
-    background: rgba(255, 247, 237, 0.94);
+    background: rgba(255, 247, 237, 0.98);
     border-color: rgba(249, 115, 22, 0.28);
+    border-radius: 18px 18px 8px 18px;
 }
 
 .msg::after {
     content: "";
     position: absolute;
     inset: auto auto -50px -30px;
-    width: 120px;
-    height: 120px;
+    width: 70px;
+    height: 70px;
     border-radius: 999px;
     background: radial-gradient(circle, rgba(15, 118, 110, 0.16), transparent 65%);
     pointer-events: none;
@@ -194,19 +214,19 @@ html, body, [class*="css"] {
 .msg-head {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    margin-bottom: 0.32rem;
+    gap: 0.45rem;
+    margin-bottom: 0.15rem;
 }
 
 .assistant-logo {
     position: relative;
-    width: 28px;
-    height: 28px;
-    border-radius: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 9px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     color: #ecfeff;
@@ -220,8 +240,8 @@ html, body, [class*="css"] {
     position: absolute;
     top: -2px;
     right: -2px;
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 999px;
     background: #f97316;
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
@@ -236,8 +256,8 @@ html, body, [class*="css"] {
 }
 
 .msg-label {
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--muted);
     margin-bottom: 0;
@@ -248,6 +268,8 @@ html, body, [class*="css"] {
     color: #0b253f;
     position: relative;
     z-index: 1;
+    white-space: pre-wrap;
+    line-height: 1.45;
 }
 
 [data-testid="stProgress"] {
@@ -259,11 +281,19 @@ html, body, [class*="css"] {
 }
 
 [data-testid="stChatInput"] {
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: var(--shadow);
+    border: 2px solid rgba(15, 118, 110, 0.42);
+    border-radius: 16px;
+    background: #ffffff !important;
+    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.16);
     overflow: hidden;
+}
+
+[data-testid="stChatInput"] form,
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInput"] > div > div,
+[data-testid="stChatInput"] [data-baseweb="textarea"],
+[data-testid="stChatInput"] [data-baseweb="base-input"] {
+    background: #ffffff !important;
 }
 
 [data-testid="stChatInput"] textarea {
@@ -271,6 +301,8 @@ html, body, [class*="css"] {
     color: #102a43 !important;
     opacity: 1 !important;
     caret-color: #0f766e !important;
+    font-size: 1rem !important;
+    background: #ffffff !important;
 }
 
 [data-testid="stChatInput"] textarea::placeholder {
@@ -279,7 +311,8 @@ html, body, [class*="css"] {
 }
 
 [data-testid="stBottomBlockContainer"] {
-    background: transparent !important;
+    background: linear-gradient(180deg, rgba(245, 242, 233, 0), rgba(245, 242, 233, 0.92) 35%, rgba(245, 242, 233, 0.98)) !important;
+    border-top: 1px solid rgba(15, 118, 110, 0.12);
 }
 
 [data-testid="stBottomBlockContainer"] > div {
@@ -288,6 +321,18 @@ html, body, [class*="css"] {
     padding-left: 1.1rem;
     padding-right: 1.1rem;
     padding-bottom: 0.85rem;
+}
+
+[data-testid="stBottomBlockContainer"] * {
+    color: #102a43;
+}
+
+[data-testid="stChatInput"] button {
+    color: #0f766e !important;
+}
+
+[data-testid="stChatInput"] button:hover {
+    color: #0b253f !important;
 }
 
 .stButton button {
@@ -343,6 +388,15 @@ html, body, [class*="css"] {
     .chat-wrap {
         padding-left: 0.85rem;
         padding-right: 0.85rem;
+    }
+
+    .msg {
+        max-width: 92%;
+    }
+
+    .msg-row.user,
+    .msg-row.bot {
+        justify-content: flex-start;
     }
 }
 
@@ -513,12 +567,14 @@ for msg in st.session_state.messages:
 
     st.markdown(
         f'''
-        <div class="msg {role_class}">
-            <div class="msg-head">
-                {role_icon}
-                <div class="msg-label">{role_label}</div>
+        <div class="msg-row {role_class}">
+            <div class="msg {role_class}">
+                <div class="msg-head">
+                    {role_icon}
+                    <div class="msg-label">{role_label}</div>
+                </div>
+                <div class="msg-content">{safe_content}</div>
             </div>
-            <div class="msg-content">{safe_content}</div>
         </div>
         ''',
         unsafe_allow_html=True,

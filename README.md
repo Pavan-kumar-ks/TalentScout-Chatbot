@@ -5,6 +5,7 @@ AI-powered conversational hiring assistant built with Streamlit and Groq models.
 The app collects candidate profile details, runs a structured technical interview, evaluates answers, asks follow-up questions, and stores interview outcomes in JSON.
 
 ## Table of Contents
+- Live Demo
 - Project Overview
 - Key Capabilities
 - End-to-End Workflow
@@ -19,6 +20,10 @@ The app collects candidate profile details, runs a structured technical intervie
 - Performance Notes
 - Troubleshooting
 - Future Improvements
+
+## Live Demo
+- Production URL: https://talentscout-chatbot-zt7o.onrender.com/
+- Hosting Platform: Render (Free Tier)
 
 ## Project Overview
 TalentScout is a multi-language technical interview chatbot designed for recruiter and screening workflows.

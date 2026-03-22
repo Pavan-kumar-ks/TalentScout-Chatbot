@@ -1,8 +1,6 @@
 import streamlit as st
 import sys
 import os
-import html
-import re
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
@@ -78,7 +76,7 @@ html, body, [class*="css"] {
     background: linear-gradient(165deg, var(--panel-strong), var(--panel));
     border-radius: 24px;
     box-shadow: var(--shadow);
-    overflow: hidden;
+    overflow: visible;
     animation: riseIn 480ms ease-out;
 }
 
@@ -150,125 +148,17 @@ html, body, [class*="css"] {
     font-weight: 800;
 }
 
-.chat-wrap {
-    padding: 0 1.2rem 5.6rem 1.2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
+.chat-stack {
+    padding: 0 1.2rem 5.8rem 1.2rem;
 }
 
-.msg-row {
-    display: flex;
-    align-items: flex-start;
-    width: 100%;
+[data-testid="stChatMessage"] {
+    animation: fadeSlide 220ms ease-out;
+    margin-bottom: 0.35rem;
 }
 
-.msg-row.bot {
-    justify-content: flex-start;
-}
-
-.msg-row.user {
-    justify-content: flex-end;
-}
-
-.msg {
-    border: 1px solid rgba(15, 118, 110, 0.16);
-    border-radius: 18px;
-    padding: 0.56rem 0.72rem 0.62rem 0.72rem;
-    line-height: 1.4;
-    box-shadow: 0 6px 16px rgba(15, 118, 110, 0.08);
-    animation: fadeSlide 260ms ease-out;
-    position: relative;
-    overflow: hidden;
-    width: auto;
-    max-width: min(72%, 560px);
-    word-break: break-word;
-}
-
-.msg.bot {
-    background: rgba(240, 253, 250, 0.92);
-    border-radius: 18px 18px 18px 8px;
-}
-
-.msg.user {
-    background: rgba(255, 247, 237, 0.98);
-    border-color: rgba(249, 115, 22, 0.28);
-    border-radius: 18px 18px 8px 18px;
-}
-
-.msg::after {
-    content: "";
-    position: absolute;
-    inset: auto auto -50px -30px;
-    width: 70px;
-    height: 70px;
-    border-radius: 999px;
-    background: radial-gradient(circle, rgba(15, 118, 110, 0.16), transparent 65%);
-    pointer-events: none;
-}
-
-.msg.user::after {
-    background: radial-gradient(circle, rgba(249, 115, 22, 0.18), transparent 65%);
-}
-
-.msg-head {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin-bottom: 0.15rem;
-}
-
-.assistant-logo {
-    position: relative;
-    width: 24px;
-    height: 24px;
-    border-radius: 9px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    color: #ecfeff;
-    background: linear-gradient(135deg, #0f766e, #0ea5a4);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 8px 16px rgba(15, 118, 110, 0.26);
-}
-
-.assistant-logo::after {
-    content: "";
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 7px;
-    height: 7px;
-    border-radius: 999px;
-    background: #f97316;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
-}
-
-.user-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #fb923c, #f97316);
-    box-shadow: 0 0 0 2px rgba(255, 247, 237, 0.9);
-}
-
-.msg-label {
-    font-size: 0.66rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 0;
-    font-weight: 700;
-}
-
-.msg-content {
-    color: #0b253f;
-    position: relative;
-    z-index: 1;
-    white-space: pre-wrap;
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p {
+    margin: 0.2rem 0;
     line-height: 1.45;
 }
 
@@ -311,8 +201,8 @@ html, body, [class*="css"] {
 }
 
 [data-testid="stBottomBlockContainer"] {
-    background: linear-gradient(180deg, rgba(245, 242, 233, 0), rgba(245, 242, 233, 0.92) 35%, rgba(245, 242, 233, 0.98)) !important;
-    border-top: 1px solid rgba(15, 118, 110, 0.12);
+    background: transparent !important;
+    border-top: none;
 }
 
 [data-testid="stBottomBlockContainer"] > div {
@@ -321,6 +211,18 @@ html, body, [class*="css"] {
     padding-left: 1.1rem;
     padding-right: 1.1rem;
     padding-bottom: 0.85rem;
+}
+
+/* Fallback selectors across Streamlit versions so deployed builds stay consistent */
+.stChatFloatingInputContainer,
+[data-testid="stBottom"] {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"] {
+    background: transparent !important;
 }
 
 [data-testid="stBottomBlockContainer"] * {
@@ -385,18 +287,9 @@ html, body, [class*="css"] {
         padding: 1rem;
     }
 
-    .chat-wrap {
+    .chat-stack {
         padding-left: 0.85rem;
         padding-right: 0.85rem;
-    }
-
-    .msg {
-        max-width: 92%;
-    }
-
-    .msg-row.user,
-    .msg-row.bot {
-        justify-content: flex-start;
     }
 }
 
@@ -553,33 +446,12 @@ st.markdown(
 
 st.progress(progress_ratio)
 
-st.markdown('<div class="chat-wrap">', unsafe_allow_html=True)
 for msg in st.session_state.messages:
-    role_class = "user" if msg["role"] == "user" else "bot"
-    role_label = "Candidate" if msg["role"] == "user" else "Assistant"
-    normalized_text = str(msg["content"] or "").replace("\r\n", "\n").strip("\n ")
-    safe_content = html.escape(normalized_text).replace("\n", "<br>")
-    safe_content = re.sub(r"^(<br>)+", "", safe_content)
-    safe_content = re.sub(r"(<br>){3,}", "<br><br>", safe_content)
-    if not safe_content.strip():
-        safe_content = "..."
-    role_icon = '<div class="user-dot"></div>' if msg["role"] == "user" else '<div class="assistant-logo">TS</div>'
-
-    st.markdown(
-        f'''
-        <div class="msg-row {role_class}">
-            <div class="msg {role_class}">
-                <div class="msg-head">
-                    {role_icon}
-                    <div class="msg-label">{role_label}</div>
-                </div>
-                <div class="msg-content">{safe_content}</div>
-            </div>
-        </div>
-        ''',
-        unsafe_allow_html=True,
-    )
-st.markdown("</div>", unsafe_allow_html=True)
+    role = "user" if msg["role"] == "user" else "assistant"
+    avatar = "🧑" if role == "user" else "🤖"
+    content = str(msg.get("content", "")).strip() or "..."
+    with st.chat_message(role, avatar=avatar):
+        st.markdown(content)
 
 st.markdown("</div>", unsafe_allow_html=True)
 

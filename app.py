@@ -2,6 +2,7 @@ import streamlit as st
 import sys
 import os
 import html
+import re
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
@@ -150,7 +151,7 @@ html, body, [class*="css"] {
 }
 
 .chat-wrap {
-    padding: 0 1.2rem 1rem 1.2rem;
+    padding: 0 1.2rem 5.6rem 1.2rem;
 }
 
 .msg {
@@ -262,10 +263,31 @@ html, body, [class*="css"] {
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.94);
     box-shadow: var(--shadow);
+    overflow: hidden;
 }
 
 [data-testid="stChatInput"] textarea {
     font-family: 'Manrope', sans-serif !important;
+    color: #102a43 !important;
+    opacity: 1 !important;
+    caret-color: #0f766e !important;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #486581 !important;
+    opacity: 0.92 !important;
+}
+
+[data-testid="stBottomBlockContainer"] {
+    background: transparent !important;
+}
+
+[data-testid="stBottomBlockContainer"] > div {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+    padding-bottom: 0.85rem;
 }
 
 .stButton button {
@@ -481,7 +503,12 @@ st.markdown('<div class="chat-wrap">', unsafe_allow_html=True)
 for msg in st.session_state.messages:
     role_class = "user" if msg["role"] == "user" else "bot"
     role_label = "Candidate" if msg["role"] == "user" else "Assistant"
-    safe_content = html.escape(str(msg["content"])).replace("\n", "<br>")
+    normalized_text = str(msg["content"] or "").replace("\r\n", "\n").strip("\n ")
+    safe_content = html.escape(normalized_text).replace("\n", "<br>")
+    safe_content = re.sub(r"^(<br>)+", "", safe_content)
+    safe_content = re.sub(r"(<br>){3,}", "<br><br>", safe_content)
+    if not safe_content.strip():
+        safe_content = "..."
     role_icon = '<div class="user-dot"></div>' if msg["role"] == "user" else '<div class="assistant-logo">TS</div>'
 
     st.markdown(

@@ -211,11 +211,37 @@ html, body, [class*="css"] {
     color: #102a43 !important;
     -webkit-text-fill-color: #102a43 !important;
     caret-color: #0f766e !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+
+[data-testid="stChatInput"] * {
+    color: #102a43 !important;
+}
+
+[data-testid="stChatInput"] textarea,
+[data-testid="stChatInput"] input,
+[data-testid="stChatInput"] [contenteditable="true"] {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+    -webkit-text-fill-color: #102a43 !important;
 }
 
 [data-testid="stChatInput"] textarea::placeholder {
     color: #56738a !important;
     opacity: 1 !important;
+}
+
+[data-testid="stChatInput"] input::placeholder {
+    color: #56738a !important;
+    opacity: 1 !important;
+}
+
+[data-testid="stChatInput"] input:-webkit-autofill,
+[data-testid="stChatInput"] textarea:-webkit-autofill {
+    -webkit-text-fill-color: #102a43 !important;
+    box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 
 [data-testid="stChatInput"] button {

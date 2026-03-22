@@ -94,5 +94,33 @@
         "location_en": "Bengaluru",
         "tech_stack_en": "python",
         "final_score": 2
+    },
+    {
+        "name": "pavan",
+        "email": "pavan@gmail.com",
+        "phone": "+91685985985",
+        "experience": "1",
+        "position": "python developer",
+        "location": "bengaluru",
+        "tech_stack": "python",
+        "language": "en",
+        "position_en": "python developer",
+        "location_en": "bengaluru",
+        "tech_stack_en": "python",
+        "final_score": 6
+    },
+    {
+        "name": "pavan",
+        "email": "pavan@gmail.com",
+        "phone": "+91685985985",
+        "experience": "1",
+        "position": "python developer",
+        "location": "bengaluru",
+        "tech_stack": "python",
+        "language": "en",
+        "position_en": "python developer",
+        "location_en": "bengaluru",
+        "tech_stack_en": "python",
+        "final_score": 6
     }
 ]

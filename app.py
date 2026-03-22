@@ -1,15 +1,17 @@
-import streamlit as st
-import sys
 import os
+import sys
+import html
+
+import streamlit as st
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-from chatbot.state_manager import initialize_state, get_next_step
+from chatbot.state_manager import get_next_step, initialize_state
 from utils.translator import normalize_language, translate_to_language
 
 
 st.set_page_config(
-    page_title="TalentScout AI",
+    page_title="TalentScout",
     page_icon="TS",
     layout="wide",
 )
@@ -17,19 +19,18 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap');
 
 :root {
-    --bg-1: #f5f2e9;
-    --bg-2: #dff3eb;
-    --ink: #102a43;
-    --muted: #486581;
+    --bg-a: #f6f4ee;
+    --bg-b: #ddf1ea;
+    --ink: #14314b;
+    --muted: #4d6b83;
     --brand: #0f766e;
     --accent: #f97316;
-    --panel: rgba(255, 255, 255, 0.82);
-    --panel-strong: rgba(255, 255, 255, 0.94);
-    --line: rgba(15, 118, 110, 0.20);
-    --shadow: 0 20px 50px rgba(16, 42, 67, 0.12);
+    --line: rgba(15, 118, 110, 0.18);
+    --card: rgba(255, 255, 255, 0.88);
+    --shadow: 0 16px 36px rgba(20, 49, 75, 0.12);
 }
 
 html, body, [class*="css"] {
@@ -39,9 +40,9 @@ html, body, [class*="css"] {
 .stApp {
     color: var(--ink);
     background:
-        radial-gradient(circle at 10% 10%, rgba(249, 115, 22, 0.16), transparent 30%),
-        radial-gradient(circle at 90% 20%, rgba(15, 118, 110, 0.2), transparent 35%),
-        linear-gradient(130deg, var(--bg-1), var(--bg-2));
+        radial-gradient(circle at 15% 8%, rgba(249, 115, 22, 0.14), transparent 32%),
+        radial-gradient(circle at 90% 15%, rgba(15, 118, 110, 0.2), transparent 38%),
+        linear-gradient(135deg, var(--bg-a), var(--bg-b));
 }
 
 .stApp::before {
@@ -50,20 +51,19 @@ html, body, [class*="css"] {
     inset: 0;
     pointer-events: none;
     background-image:
-        linear-gradient(rgba(15, 118, 110, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(15, 118, 110, 0.05) 1px, transparent 1px);
+        linear-gradient(rgba(20, 49, 75, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 49, 75, 0.04) 1px, transparent 1px);
     background-size: 32px 32px;
-    mask-image: radial-gradient(circle at center, black 10%, transparent 85%);
 }
 
 .main .block-container {
-    max-width: 1024px;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    max-width: 980px;
+    padding-top: 1.1rem;
+    padding-bottom: 6.1rem;
 }
 
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, rgba(16, 42, 67, 0.92), rgba(12, 74, 110, 0.94));
+    background: linear-gradient(180deg, rgba(20, 49, 75, 0.95), rgba(12, 74, 110, 0.92));
     border-right: 1px solid rgba(255, 255, 255, 0.16);
 }
 
@@ -73,108 +73,130 @@ html, body, [class*="css"] {
 
 .shell {
     border: 1px solid var(--line);
-    background: linear-gradient(165deg, var(--panel-strong), var(--panel));
-    border-radius: 24px;
+    border-radius: 22px;
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.95), var(--card));
     box-shadow: var(--shadow);
-    overflow: visible;
-    animation: riseIn 480ms ease-out;
+    padding: 1rem 1rem 0.35rem 1rem;
 }
 
 .hero {
-    padding: 1.4rem 1.4rem 1.2rem 1.4rem;
-    border-bottom: 1px solid var(--line);
-    background: linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(249, 115, 22, 0.1));
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: linear-gradient(100deg, rgba(15, 118, 110, 0.1), rgba(249, 115, 22, 0.1));
+    padding: 1rem 1rem 0.85rem 1rem;
 }
 
 .hero-badge {
     display: inline-block;
-    padding: 0.3rem 0.65rem;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
     text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: #0f766e;
-    border: 1px solid rgba(15, 118, 110, 0.28);
+    border: 1px solid rgba(15, 118, 110, 0.34);
     border-radius: 999px;
-    background: rgba(240, 253, 250, 0.8);
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.27rem 0.62rem;
 }
 
 .hero-title {
-    margin: 0.65rem 0 0.2rem 0;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(1.7rem, 2.7vw, 2.35rem);
+    margin: 0.56rem 0 0.22rem 0;
+    font-size: clamp(1.56rem, 2.5vw, 2.1rem);
     font-weight: 800;
-    line-height: 1.15;
-    color: #0b253f;
-    background: linear-gradient(100deg, #0b253f 0%, #0f766e 55%, #f97316 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 6px 24px rgba(15, 118, 110, 0.15);
+    color: #0d2f4e;
 }
 
 .hero-subtitle {
     margin: 0;
     color: var(--muted);
-    font-size: 1.02rem;
-    max-width: 760px;
-}
-
-.metrics {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(120px, 1fr));
-    gap: 0.75rem;
-    padding: 1rem 1.2rem 0.8rem 1.2rem;
 }
 
 .metric-card {
     border: 1px solid var(--line);
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.82);
-    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.88);
+    padding: 0.7rem 0.8rem;
 }
 
 .metric-label {
-    color: var(--muted);
-    font-size: 0.78rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.74rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 0.15rem;
 }
 
 .metric-value {
-    color: #0b253f;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 800;
+    color: #0d2f4e;
 }
 
-.chat-stack {
-    padding: 0 1.2rem 5.8rem 1.2rem;
+.chat-area {
+    margin-top: 0.65rem;
 }
 
 [data-testid="stChatMessage"] {
-    animation: fadeSlide 220ms ease-out;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.28rem;
+}
+
+.bubble {
+    display: inline-block;
+    max-width: min(78%, 700px);
+    border-radius: 16px;
+    padding: 0.62rem 0.82rem;
+    line-height: 1.45;
+    color: #102a43;
+    border: 1px solid var(--line);
+    box-shadow: 0 6px 16px rgba(20, 49, 75, 0.08);
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.bubble-assistant {
+    background: rgba(240, 253, 250, 0.95);
+    border-radius: 16px 16px 16px 9px;
+}
+
+.bubble-user {
+    background: rgba(255, 247, 237, 0.98);
+    border-color: rgba(249, 115, 22, 0.28);
+    border-radius: 16px 16px 9px 16px;
 }
 
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p {
-    margin: 0.2rem 0;
-    line-height: 1.45;
+    margin: 0;
 }
 
 [data-testid="stProgress"] {
-    padding: 0.15rem 1.1rem 0.6rem 1.1rem;
+    margin-top: 0.45rem;
+    margin-bottom: 0.45rem;
 }
 
 [data-testid="stProgress"] > div > div {
     background: linear-gradient(90deg, #0f766e, #f97316);
 }
 
+[data-testid="stBottomBlockContainer"],
+[data-testid="stBottom"],
+.stChatFloatingInputContainer {
+    background: #f6f4ee !important;
+    border-top: 1px solid rgba(15, 118, 110, 0.16);
+}
+
+[data-testid="stBottomBlockContainer"] > div {
+    max-width: 980px;
+    margin: 0 auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 0.8rem;
+}
+
 [data-testid="stChatInput"] {
     border: 2px solid rgba(15, 118, 110, 0.42);
-    border-radius: 16px;
-    background: #ffffff !important;
+    border-radius: 14px;
     box-shadow: 0 8px 24px rgba(15, 118, 110, 0.16);
+    background: #ffffff !important;
     overflow: hidden;
 }
 
@@ -182,51 +204,18 @@ html, body, [class*="css"] {
 [data-testid="stChatInput"] > div,
 [data-testid="stChatInput"] > div > div,
 [data-testid="stChatInput"] [data-baseweb="textarea"],
-[data-testid="stChatInput"] [data-baseweb="base-input"] {
+[data-testid="stChatInput"] [data-baseweb="base-input"],
+[data-testid="stChatInput"] textarea,
+[data-testid="stChatInput"] input {
     background: #ffffff !important;
-}
-
-[data-testid="stChatInput"] textarea {
-    font-family: 'Manrope', sans-serif !important;
     color: #102a43 !important;
-    opacity: 1 !important;
+    -webkit-text-fill-color: #102a43 !important;
     caret-color: #0f766e !important;
-    font-size: 1rem !important;
-    background: #ffffff !important;
 }
 
 [data-testid="stChatInput"] textarea::placeholder {
-    color: #486581 !important;
-    opacity: 0.92 !important;
-}
-
-[data-testid="stBottomBlockContainer"] {
-    background: transparent !important;
-    border-top: none;
-}
-
-[data-testid="stBottomBlockContainer"] > div {
-    max-width: 1024px;
-    margin: 0 auto;
-    padding-left: 1.1rem;
-    padding-right: 1.1rem;
-    padding-bottom: 0.85rem;
-}
-
-/* Fallback selectors across Streamlit versions so deployed builds stay consistent */
-.stChatFloatingInputContainer,
-[data-testid="stBottom"] {
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"] {
-    background: transparent !important;
-}
-
-[data-testid="stBottomBlockContainer"] * {
-    color: #102a43;
+    color: #56738a !important;
+    opacity: 1 !important;
 }
 
 [data-testid="stChatInput"] button {
@@ -234,65 +223,36 @@ html, body, [class*="css"] {
 }
 
 [data-testid="stChatInput"] button:hover {
-    color: #0b253f !important;
+    color: #0d2f4e !important;
 }
 
 .stButton button {
-    border: 1px solid rgba(255, 255, 255, 0.38) !important;
     border-radius: 12px !important;
-    font-weight: 700 !important;
-    background: linear-gradient(90deg, rgba(249, 115, 22, 0.92), rgba(15, 118, 110, 0.9)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    background: linear-gradient(90deg, rgba(249, 115, 22, 0.95), rgba(15, 118, 110, 0.9)) !important;
     color: #f8fafc !important;
-}
-
-@keyframes riseIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeSlide {
-    from {
-        opacity: 0;
-        transform: translateX(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    font-weight: 700 !important;
 }
 
 @media (max-width: 900px) {
     .main .block-container {
-        padding-top: 1rem;
-        padding-left: 0.7rem;
-        padding-right: 0.7rem;
+        padding-top: 0.7rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
     }
 
     .shell {
-        border-radius: 16px;
-    }
-
-    .metrics {
-        grid-template-columns: 1fr;
-        padding-top: 0.75rem;
-    }
-
-    .hero {
-        padding: 1rem;
-    }
-
-    .chat-stack {
-        padding-left: 0.85rem;
-        padding-right: 0.85rem;
+        border-radius: 14px;
+        padding-left: 0.65rem;
+        padding-right: 0.65rem;
     }
 }
 
+@media (max-width: 640px) {
+    .bubble {
+        max-width: 94%;
+    }
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -320,7 +280,6 @@ language_options = {
     "Hindi": "hi",
 }
 
-conversation_started = len(st.session_state.messages) > 0
 current_lang_code = normalize_language(st.session_state.chat_state.get("language", "en"))
 default_language_label = next(
     (label for label, code in language_options.items() if code == current_lang_code),
@@ -372,12 +331,7 @@ def ui_text(key):
     return get_ui_copy(current_lang_code)[key]
 
 
-if len(st.session_state.messages) == 0:
-    intro = get_next_step(st.session_state.chat_state, "")
-    st.session_state.messages.append({"role": "assistant", "content": intro})
-
-progress_count = st.session_state.chat_state.get("current_question_index", 0)
-progress_ratio = min(progress_count / 4, 1.0)
+conversation_started = len(st.session_state.messages) > 0
 
 with st.sidebar:
     st.header(ui_text("dashboard"))
@@ -397,9 +351,10 @@ with st.sidebar:
     if conversation_started:
         st.caption(ui_text("language_locked"))
 
-    st.markdown("---")
+    progress_count = st.session_state.chat_state.get("current_question_index", 0)
     st.metric(ui_text("questions_completed"), progress_count)
 
+    st.markdown("---")
     st.markdown(f"### {ui_text('controls')}")
     if st.button(ui_text("restart"), use_container_width=True):
         st.session_state.clear()
@@ -408,6 +363,14 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(f"### {ui_text('about')}")
     st.write(ui_text("about_text"))
+
+if len(st.session_state.messages) == 0:
+    intro = get_next_step(st.session_state.chat_state, "")
+    st.session_state.messages.append({"role": "assistant", "content": intro})
+
+progress_count = st.session_state.chat_state.get("current_question_index", 0)
+progress_ratio = min(progress_count / 4, 1.0)
+status_value = ui_text("status_value_active") if len(st.session_state.messages) > 0 else ui_text("status_value_ready")
 
 st.markdown('<div class="shell">', unsafe_allow_html=True)
 
@@ -422,36 +385,51 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-status_value = ui_text("status_value_active") if conversation_started else ui_text("status_value_ready")
-
-st.markdown(
-    f'''
-    <div class="metrics">
+metric_col_1, metric_col_2, metric_col_3 = st.columns(3)
+with metric_col_1:
+    st.markdown(
+        f'''
         <div class="metric-card">
             <div class="metric-label">{ui_text("progress")}</div>
             <div class="metric-value">{int(progress_ratio * 100)}%</div>
         </div>
+        ''',
+        unsafe_allow_html=True,
+    )
+with metric_col_2:
+    st.markdown(
+        f'''
         <div class="metric-card">
             <div class="metric-label">{ui_text("status")}</div>
             <div class="metric-value">{status_value}</div>
         </div>
+        ''',
+        unsafe_allow_html=True,
+    )
+with metric_col_3:
+    st.markdown(
+        f'''
         <div class="metric-card">
             <div class="metric-label">{ui_text("language_card")}</div>
             <div class="metric-value">{selected_language_label}</div>
         </div>
-    </div>
-    ''',
-    unsafe_allow_html=True,
-)
+        ''',
+        unsafe_allow_html=True,
+    )
 
 st.progress(progress_ratio)
 
-for msg in st.session_state.messages:
-    role = "user" if msg["role"] == "user" else "assistant"
-    avatar = "🧑" if role == "user" else "🤖"
-    content = str(msg.get("content", "")).strip() or "..."
-    with st.chat_message(role, avatar=avatar):
-        st.markdown(content)
+with st.container():
+    st.markdown('<div class="chat-area">', unsafe_allow_html=True)
+    for msg in st.session_state.messages:
+        role = "user" if msg["role"] == "user" else "assistant"
+        avatar = "🧑" if role == "user" else "🤖"
+        content = str(msg.get("content", "")).strip() or "..."
+        safe_content = html.escape(content).replace("\n", "<br>")
+        bubble_class = "bubble-user" if role == "user" else "bubble-assistant"
+        with st.chat_message(role, avatar=avatar):
+            st.markdown(f'<div class="bubble {bubble_class}">{safe_content}</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 

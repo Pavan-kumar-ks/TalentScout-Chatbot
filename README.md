@@ -1,498 +1,347 @@
-# 🤖 TalentScout - AI-Powered Hiring Assistant Chatbot
+# TalentScout AI Hiring Assistant
+
+AI-powered conversational hiring assistant built with Streamlit and Groq models.
+
+The app collects candidate profile details, runs a structured technical interview, evaluates answers, asks follow-up questions, and stores interview outcomes in JSON.
 
 ## Table of Contents
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Installation Instructions](#installation-instructions)
-- [Usage Guide](#usage-guide)
-- [Technical Details](#technical-details)
-- [Prompt Design](#prompt-design)
-- [Challenges & Solutions](#challenges--solutions)
-- [Project Structure](#project-structure)
-- [Future Enhancements](#future-enhancements)
-
----
+- Project Overview
+- Key Capabilities
+- End-to-End Workflow
+- Architecture and Codebase
+- Installation Instructions
+- Configuration (.env)
+- Usage Guide
+- Technical Details
+- Prompt Design
+- Challenges and Solutions
+- Data Storage Schema
+- Performance Notes
+- Troubleshooting
+- Future Improvements
 
 ## Project Overview
+TalentScout is a multi-language technical interview chatbot designed for recruiter and screening workflows.
 
-**TalentScout** is an intelligent, conversational AI-powered hiring assistant designed to streamline the recruitment process. It conducts automated technical interviews with candidates by:
+Core idea:
+- Keep interview logic and scoring canonical in English.
+- Let candidates interact in their preferred language.
+- Translate assistant output to the selected language.
+- Persist candidate records in `data/candidates.json` with normalized English fields.
 
-- Collecting candidate information (name, email, phone, experience, position, location, tech stack)
-- Generating contextual technical interview questions based on candidate expertise
-- Evaluating candidate responses with detailed scoring and feedback
-- Generating follow-up questions to probe deeper into candidate knowledge
-- Storing candidate data and assessment results for HR review
+This architecture improves consistency, reduces scoring drift, and keeps stored data clean for downstream analysis.
 
-The chatbot provides a seamless, conversational experience using Streamlit for the UI and Groq's Llama 3.3 API for intelligent question generation and evaluation.
+## Key Capabilities
+- Guided candidate onboarding:
+  - Name, email, phone, experience, role, location, tech stack.
+- Adaptive technical interview:
+  - Generates 4 scenario-based questions with increasing difficulty.
+- Strict answer evaluation:
+  - Score + relevance + short actionable feedback.
+- Follow-up generation:
+  - One concise follow-up question focused on answer gaps.
+- Multilingual candidate experience:
+  - 10 language options in UI.
+- Canonical English pipeline:
+  - Input normalized to English for internal processing.
+- Persistent storage:
+  - Candidate data plus final score saved to JSON.
 
-### Key Capabilities
-✅ **Adaptive Question Generation** - Creates difficulty-scaled questions (Easy → Hard)  
-✅ **Real-time Evaluation** - Scores answers with relevance assessment and feedback  
-✅ **Follow-up Intelligence** - Asks contextual follow-ups to assess depth of knowledge  
-✅ **Data Persistence** - Saves candidate profiles and interview results  
-✅ **Input Validation** - Validates email and phone formats before proceeding  
-✅ **Sentiment Analysis** - Analyzes candidate confidence through response sentiment  
+## End-to-End Workflow
+1. Candidate selects interview language in UI.
+2. Chatbot starts guided profile collection.
+3. Candidate responses are translated to English internally when needed.
+4. Technical questions are generated in English using LLaMA.
+5. Candidate answers are evaluated in English using strict rubric.
+6. Follow-up question is generated in English.
+7. Final assistant message is translated once to selected language for display.
+8. Candidate record is saved to `data/candidates.json` with both original and normalized English fields.
 
----
+## Architecture and Codebase
 
-## Features
+### High-level modules
+- `app.py`:
+  - Streamlit UI, language selector, chat rendering, UI localization cache.
+- `config.py`:
+  - Environment config for interview model and translation model.
+- `chatbot/`:
+  - `state_manager.py`: main interview state machine and flow control.
+  - `prompt_engine.py`: question-generation prompt template.
+  - `question_generator.py`: runs prompt + parses numbered questions.
+  - `evaluator.py`: strict technical evaluation prompt.
+  - `followup_generator.py`: concise follow-up prompt.
+  - `llm_handler.py`: Groq API call wrapper for interview LLM.
+- `utils/`:
+  - `translator.py`: translation functions, caching, translation-model API path.
+  - `validators.py`: email and phone validation.
+  - `helpers.py`: weak-answer detection.
+  - `sentiment.py`: lightweight sentiment cue checks.
+  - `data_handler.py`: JSON read/append/write persistence.
+- `data/candidates.json`:
+  - Candidate interview records.
 
-### 1. **Conversational Interview Flow**
-- Guided, multi-stage interview process
-- Natural language interactions
-- State management to track interview progress
+### Model split (important)
+- Interview and question generation model:
+  - `GROQ_MODEL` (default: `llama-3.1-8b-instant`)
+- Translation model:
+  - `TRANSLATION_MODEL` (default: `openai/gpt-oss-120b`)
 
-### 2. **Intelligent Question Generation**
-- Context-aware questions based on tech stack and experience
-- Four difficulty levels: Easy → Medium → Medium-Hard → Hard
-- Scenario-based, practical questions (no definitions)
-
-### 3. **Comprehensive Evaluation**
-- Scoring system (1-10 scale with strict rubrics)
-- Relevance assessment (Relevant, Weakly Relevant, Irrelevant)
-- Detailed feedback highlighting gaps and areas for improvement
-
-### 4. **Candidate Data Management**
-- Stores all candidate information in JSON format
-- Tracks interview responses and evaluations
-- Enables easy review and candidate comparison
-
----
+This split keeps technical reasoning fast while using a stronger multilingual model for translation quality.
 
 ## Installation Instructions
 
 ### Prerequisites
-- **Python 3.8+** installed on your system
-- **Groq API Key** (sign up at [console.groq.com](https://console.groq.com))
-- **Git** (for cloning the repository)
-- **pip** (Python package manager)
+- Python 3.10+ recommended.
+- Pip and virtual environment support.
+- Groq API keys.
 
-### Step 1: Clone or Download the Repository
+### 1) Clone repository
 ```bash
-git clone <repository-url>
+git clone <your-repo-url>
 cd TalentScout-Chatbot
 ```
 
-### Step 2: Create a Virtual Environment (Recommended)
-```bash
-# Using venv
+### 2) Create and activate virtual environment
+Windows PowerShell:
+```powershell
 python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
 
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
+macOS/Linux:
+```bash
+python -m venv venv
 source venv/bin/activate
 ```
 
-### Step 3: Install Dependencies
+### 3) Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-The `requirements.txt` file includes:
-- `streamlit==1.28.1` - Web UI framework
-- `requests==2.31.0` - HTTP client for API calls
-- `python-dotenv==1.0.0` - Environment variable management
+### 4) Create `.env`
+Create a `.env` file in project root.
 
-### Step 4: Set Up Environment Variables
-Create a `.env` file in the project root:
-```bash
-GROQ_API_KEY=your_actual_groq_api_key_here
+Required variables:
+```env
+GROQ_API_KEY=your_interview_flow_key
+TRANSLATION_GROQ_API_KEY=your_translation_key
 ```
 
-**Important:** Never commit the `.env` file to version control. Add it to `.gitignore`.
+Optional variables:
+```env
+GROQ_MODEL=llama-3.1-8b-instant
+GROQ_TIMEOUT_SECONDS=30
+TRANSLATION_MODEL=openai/gpt-oss-120b
+TRANSLATION_TIMEOUT_SECONDS=20
+```
 
-### Step 5: Run the Application
+### 5) Run app
 ```bash
 streamlit run app.py
 ```
 
-The application will open in your default browser at `http://localhost:8501`
+Default URL:
+- `http://localhost:8501`
 
----
+## Configuration (.env)
+
+### Why two keys?
+- `GROQ_API_KEY`:
+  - Used for question generation, evaluation, and follow-up logic.
+- `TRANSLATION_GROQ_API_KEY`:
+  - Used for translation only.
+
+This enables operational separation and easier tuning.
+
+### Recommended defaults
+- Keep interview model lightweight for speed.
+- Keep translation model high-quality for multilingual accuracy.
 
 ## Usage Guide
 
-### Starting the Interview
-1. Launch the application: `streamlit run app.py`
-2. The chatbot greets you with a welcome message
-3. Follow the conversational prompts to provide:
-   - Full Name
-   - Email Address
-   - Phone Number
-   - Years of Experience
-   - Position(s) Applying For
-   - Current Location
-   - Tech Stack (languages, frameworks, tools)
+### Interviewer/Candidate flow
+1. Open app.
+2. Choose one of 10 interview languages.
+3. Complete profile prompts.
+4. Answer technical questions and follow-ups.
+5. Receive final completion summary and score.
 
-### During the Interview
-1. **Question Generation**: After providing your tech stack, the system generates 4 technical questions
-2. **Answer Submission**: Respond to each question in the chat
-3. **Evaluation**: Receive immediate scoring and feedback on your answer
-4. **Follow-ups**: Answer contextual follow-up questions to demonstrate deeper knowledge
-
-### Data Storage
-- All candidate information is automatically saved to `data/candidates.json`
-- Interview responses and scores are stored for later review
-
-### Exiting the Interview
-Type any of the following to end the conversation:
+### Exit flow
+At any time candidate can type:
 - `exit`
 - `quit`
 - `bye`
 
----
+The app saves available candidate data before ending.
+
+### Restart flow
+Use sidebar restart button to clear session and start a fresh interview.
 
 ## Technical Details
 
-### Architecture Overview
-```
-TalentScout-Chatbot/
-├── app.py                          # Streamlit UI entry point
-├── config.py                       # Configuration & environment variables
-├── requirements.txt                # Project dependencies
-├── data/
-│   └── candidates.json            # Persistent candidate data storage
-├── chatbot/
-│   ├── llm_handler.py             # Groq API integration
-│   ├── prompt_engine.py           # Prompt templates for question generation
-│   ├── question_generator.py      # Question generation logic
-│   ├── evaluator.py               # Answer evaluation with scoring
-│   ├── followup_generator.py      # Follow-up question generation
-│   ├── state_manager.py           # Interview state management
-│   └── __init__.py
-└── utils/
-    ├── data_handler.py            # Candidate data persistence
-    ├── sentiment.py               # Sentiment analysis of responses
-    ├── validators.py              # Email & phone validation
-    ├── helpers.py                 # Utility functions
-    └── __init__.py
-```
+### Libraries used
+- `streamlit`: interactive web UI.
+- `requests`: Groq HTTP API calls.
+- `python-dotenv`: environment variable loading.
+- `googletrans`: fallback translation utility path.
 
-### Technologies & Libraries
+### Core design decisions
+- Canonical English processing:
+  - All decision logic and prompts run in English.
+- Output-only translation:
+  - Translate final assistant text once per message.
+- Translation caching:
+  - Caches repeated translations to reduce latency.
+- Strict evaluation schema:
+  - Predictable score extraction and final score computation.
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **UI Framework** | Streamlit 1.28.1 | Interactive web interface for the chatbot |
-| **LLM Integration** | Groq API (Llama 3.3-70B) | Question generation, evaluation, and follow-ups |
-| **HTTP Requests** | Requests 2.31.0 | API communication with Groq servers |
-| **Environment** | python-dotenv 1.0.0 | Secure API key management |
-| **Data Storage** | JSON | Lightweight candidate data persistence |
-| **Validation** | Regex (Python built-in) | Email and phone number validation |
-
-### Model Details
-
-**LLM Model**: Groq - `llama-3.3-70b-versatile`
-- **Why Llama 3.3?** 
-  - Fast inference (sub-second responses)
-  - Strong understanding of technical topics
-  - Cost-effective compared to GPT-4
-  - Excellent performance on reasoning tasks
-
-**API Configuration**:
-- Base URL: `https://api.groq.com/openai/v1/chat/completions`
-- Temperature: 0.7 (balanced between creativity and consistency)
-- Request Format: OpenAI-compatible API
-
-### Key Modules
-
-#### `llm_handler.py`
-Handles all LLM API communication with error handling:
-```python
-- call_llm(prompt) → Sends prompt to Groq and returns response
-- Supports streaming and error recovery
-- Validates JSON responses
-```
-
-#### `prompt_engine.py`
-Generates specialized prompts for different tasks:
-```python
-- build_question_prompt(tech_stack, experience) 
-  → Creates prompt for question generation
-```
-
-#### `evaluator.py`
-Evaluates candidate answers with strict rubrics:
-```python
-- evaluate_answer(question, answer)
-  → Returns score (1-10), relevance, and feedback
-```
-
-#### `state_manager.py`
-Manages interview conversation flow:
-```python
-- initialize_state() → Sets up initial interview state
-- get_next_step(state, user_input) → Progresses through interview stages
-```
-
----
+### State machine stages
+- `greeting`
+- `ask_name`
+- `ask_email`
+- `ask_phone`
+- `ask_experience`
+- `ask_position`
+- `ask_location`
+- `ask_tech_stack`
+- `ask_question`
+- `followup`
+- `end`
 
 ## Prompt Design
 
-### Philosophy
-Prompts were carefully engineered to:
-1. **Elicit Quality Responses** - Ask practical, scenario-based questions
-2. **Maintain Consistency** - Ensure reproducible evaluation standards
-3. **Minimize Hallucinations** - Provide strict output formats and rules
-4. **Scale Difficulty** - Adapt question depth to candidate experience level
+### 1) Information gathering prompt strategy
+Profile collection is deterministic (state machine), not open-ended. This avoids model variance in required fields and validation sequence.
 
-### Question Generation Prompt Strategy
+### 2) Technical question generation prompt strategy
+Prompt in `prompt_engine.py` enforces:
+- Exactly 4 questions.
+- Increasing difficulty.
+- Scenario-based framing.
+- No definition-style questions.
+- English-only output.
 
-**Objective**: Generate 4 technical questions with increasing difficulty
+Difficulty progression:
+- Easy
+- Medium
+- Medium-hard
+- Hard
 
-**Key Elements**:
-- **Context Input**: Tech stack and years of experience
-- **Difficulty Levels**: Explicitly defined (Easy → Hard)
-- **Anti-Patterns**: Explicitly prohibit "What is X?" definition questions
-- **Output Format**: Strict numbered format for easy parsing
+### 3) Evaluation prompt strategy
+Prompt in `evaluator.py` enforces:
+- Strict rubric (Score 1-10).
+- Relevance category.
+- Short feedback.
+- High-score constraints for depth/trade-offs.
+- English-only output.
 
-**Example Structure**:
-```
-1. EASY: Practical understanding, real-world scenario
-2. MEDIUM: Application-based, requires reasoning
-3. MEDIUM-HARD: Optimization, trade-offs, performance
-4. HARD: System design, edge cases, scalability
-```
+### 4) Follow-up prompt strategy
+Prompt in `followup_generator.py` enforces:
+- Exactly one concise follow-up.
+- Conversational tone.
+- Focus on identified gap.
+- English-only output.
 
-**Rules Enforced**:
-- ❌ No definition questions
-- ✅ All scenario-based inquiries
-- ✅ Clear, concise questions
-- ✅ Increasing complexity
+## Challenges and Solutions
 
-### Evaluation Prompt Strategy
+### Challenge 1: Multilingual flow became slow
+Problem:
+- Multiple translation calls for pieces of one response increased latency.
 
-**Objective**: Score answers fairly with consistent rubric
+Solution:
+- Switched to one-pass output translation per assistant message.
+- Added translation cache.
+- Cached UI copy per language in session state.
 
-**Scoring System**:
-- **1-2**: Completely wrong / irrelevant
-- **3-4**: Very weak, lacks understanding
-- **5-6**: Basic idea, missing depth
-- **7-8**: Good but incomplete, lacks edge cases
-- **9-10**: Excellent, covers trade-offs and real-world usage
+### Challenge 2: Mixed-language scoring inconsistency
+Problem:
+- Evaluation quality dropped when prompts/answers mixed languages.
 
-**Strictness Rules**:
-- Scores 8+ require real-world reasoning OR trade-offs/optimization
-- Generic answers max out at 6
-- Shallow answers max out at 5
+Solution:
+- Canonical English processing pipeline.
+- Translate user input to English before scoring.
+- Keep prompts and expected outputs English-only.
 
-**Output Validation**: Structured format ensures parseable results
-```
-Score: X/10
-Relevance: [Relevant | Weakly Relevant | Irrelevant]
-Feedback: [2-3 lines of actionable feedback]
-```
+### Challenge 3: Model roles were not clearly separated
+Problem:
+- Same model path handled both reasoning and translation.
 
-### Follow-up Generation Prompt
+Solution:
+- Split model usage:
+  - LLaMA for interview logic.
+  - GPT-OSS for translation.
+- Added separate translation key and config path.
 
-**Objective**: Ask natural, conversational follow-ups
+### Challenge 4: Data normalization across languages
+Problem:
+- Stored data became inconsistent when candidates used different languages.
 
-**Constraints**:
-- Max 1-2 lines (keep natural)
-- Focus on knowledge gaps
-- No labels or formal framing
-- Conversational tone
+Solution:
+- Save original values plus normalized English fields (`*_en`).
+- Maintain language field for traceability.
 
----
+### Challenge 5: Robustness with API/network variability
+Problem:
+- External API or translation service can fail.
 
-## Challenges & Solutions
+Solution:
+- Fallback behavior in translator.
+- Timeout settings for both interview and translation model calls.
 
-### Challenge 1: Question Parsing Inconsistency
-**Problem**: LLM responses weren't always in the expected numbered format, breaking regex parsing
+## Data Storage Schema
+Records are appended to `data/candidates.json`.
 
-**Solution**:
-- Implemented robust regex splitting on numbered patterns: `r"\n\d+\.\s"`
-- Added fallback logic to return full response if parsing fails
-- Clean up whitespace and empty entries post-parsing
+Typical fields:
+- `name`
+- `email`
+- `phone`
+- `experience`
+- `position`
+- `location`
+- `tech_stack`
+- `language`
+- `position_en`
+- `location_en`
+- `tech_stack_en`
+- `final_score`
 
-```python
-questions = re.split(r"\n\d+\.\s", response)
-questions = [q.strip() for q in questions if q.strip()]
-```
-
-### Challenge 2: LLM Response Validation
-**Problem**: API calls could fail silently or return incomplete data
-
-**Solution**:
-- Added explicit error checking for expected JSON structure
-- Validate presence of required fields (`choices`, `message`)
-- Return meaningful error messages to user
-
-```python
-if "choices" not in response_json:
-    return f"LLM Error: {response_json}"
-```
-
-### Challenge 3: Scoring Consistency
-**Problem**: LLM would rate answers generously without following strict rubrics
-
-**Solution**:
-- Implemented explicit, repetitive rubrics in prompts
-- Added "IMPORTANT RULES" section with scoring caps
-- Mentioned specific criteria for high scores (8+)
-- Emphasized strictness at multiple points in prompt
-
-### Challenge 4: State Management Complexity
-**Problem**: Tracking multi-stage interview flow was prone to errors
-
-**Solution**:
-- Centralized state management in `state_manager.py`
-- Clear stage definitions: greeting → name → email → phone → experience → position → location → tech_stack → questions
-- Easy stage transitions with validation at each step
-
-### Challenge 5: Data Persistence
-**Problem**: Need to store candidate data reliably without a database
-
-**Solution**:
-- Used JSON format for simplicity and portability
-- Implemented safe file handling with try-catch blocks
-- Auto-create `data/candidates.json` if it doesn't exist
-- Append new candidates to maintain history
-
-### Challenge 6: Input Validation
-**Problem**: Invalid emails and phone numbers were accepted
-
-**Solution**:
-- Created regex validators in `utils/validators.py`
-- Email pattern: `r'^[\w\.-]+@[\w\.-]+\.\w+$'`
-- Phone pattern: `r'^\+?\d{10,15}$'`
-- Provide specific error messages for failed validation
-
-### Challenge 7: Temperature-Based Response Variability
-**Problem**: Interview experience was too random with high temperature
-
-**Solution**:
-- Set temperature to 0.7 (balanced approach)
-- Provides consistent evaluation criteria
-- Still allows for natural language generation
-- Avoids overly deterministic or too random responses
-
----
-
-## Project Structure
-
-```
-TalentScout-Chatbot/
-│
-├── 📄 app.py                    # Main Streamlit application
-├── 📄 config.py                 # Configuration & environment setup
-├── 📄 requirements.txt          # Python dependencies
-├── 📄 README.md                 # This file
-│
-├── 📁 chatbot/                  # Core chatbot logic
-│   ├── __init__.py
-│   ├── llm_handler.py          # Groq API wrapper
-│   ├── prompt_engine.py        # Prompt templates
-│   ├── question_generator.py   # Question generation logic
-│   ├── evaluator.py            # Answer evaluation
-│   ├── followup_generator.py   # Follow-up questions
-│   └── state_manager.py        # Interview state machine
-│
-├── 📁 utils/                    # Utility modules
-│   ├── __init__.py
-│   ├── data_handler.py         # Candidate data storage
-│   ├── sentiment.py            # Sentiment analysis
-│   ├── validators.py           # Input validation
-│   └── helpers.py              # Helper functions
-│
-├── 📁 data/                     # Data storage
-│   └── candidates.json         # Candidate interview records
-│
-└── 📁 __pycache__/            # Python cache (ignore)
-```
-
----
-
-## Future Enhancements
-
-### Phase 2 Features
-- [ ] **Database Integration** - Replace JSON with PostgreSQL/MongoDB for scalability
-- [ ] **Video Interview** - Add video recording capability for reference
-- [ ] **Skill Assessment Matrix** - Generate candidate skill reports
-- [ ] **Interview Analytics** - Track hiring funnel, time-to-hire, average scores
-- [ ] **Multi-language Support** - Conduct interviews in Hindi, Spanish, Mandarin, etc.
-- [ ] **Resume Parsing** - Auto-populate candidate info from resume upload
-
-### Phase 3 Enhancements
-- [ ] **Behavioral Questions** - Add soft skills assessment
-- [ ] **Coding Challenges** - Integrate live code execution (LeetCode-style)
-- [ ] **Candidate Portal** - Self-service interview scheduling and tracking
-- [ ] **Admin Dashboard** - Real-time hiring manager interface
-- [ ] **AI-Powered Recommendations** - Suggest pass/fail decisions
-
-### Performance Optimizations
-- [ ] Implement response caching for similar questions
-- [ ] Add Groq API rate limiting and retry logic
-- [ ] Optimize JSON operations for large candidate datasets
-- [ ] Add background job processing for evaluations
-
----
+## Performance Notes
+- Non-English interviews are always slower than English due to translation overhead.
+- Current code minimizes overhead with:
+  - Translation caching.
+  - Single-pass translation for outgoing assistant responses.
+  - UI text caching by language.
+- For speed-sensitive scenarios:
+  - Use a smaller translation model.
+  - Reduce response verbosity in prompts.
+  - Keep timeout values reasonable.
 
 ## Troubleshooting
 
-### Issue: `GROQ_API_KEY not found`
-**Solution**: Ensure `.env` file exists in project root with valid API key
-```bash
-echo GROQ_API_KEY=your_key > .env
-```
+### App starts but no response from model
+- Verify `.env` keys.
+- Check network and Groq availability.
+- Confirm model IDs are valid for your account.
 
-### Issue: Streamlit not loading
-**Solution**: Verify installation and clear cache
-```bash
-pip install --upgrade streamlit
-streamlit run app.py --client.disableFileWatcher false
-```
+### Translation not applied
+- Confirm `TRANSLATION_GROQ_API_KEY` is set.
+- Confirm language selected in sidebar before interview starts.
 
-### Issue: API Rate Limiting
-**Solution**: Groq has rate limits. If you hit them:
-- Wait a few minutes before retrying
-- Consider caching frequently asked questions
-- Contact Groq support for rate limit increase
+### Slow responses in non-English mode
+- This is expected due to translation step.
+- Try lower-latency translation model via `TRANSLATION_MODEL`.
 
-### Issue: JSON Parse Errors
-**Solution**: Validate `data/candidates.json` format. If corrupted:
-```bash
-# Backup and reset
-mv data/candidates.json data/candidates.json.bak
-echo "[]" > data/candidates.json
-```
+### Invalid email/phone rejected
+- Email and phone validation is strict by design.
+- Phone expects 10-15 digits, optional leading `+`.
+
+## Future Improvements
+- Async parallelization for translation and UI updates.
+- Per-language prompt compression for faster generation.
+- Background job queue for high-throughput interview sessions.
+- Optional database backend (PostgreSQL) instead of JSON file persistence.
+- Admin analytics dashboard for score trends by stack and role.
 
 ---
-
-## Contributing
-
-We welcome contributions! To contribute:
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-## Support & Contact
-
-For issues, questions, or suggestions:
-- 📧 Email: support@talentscout.ai
-- 🐛 Report Bugs: GitHub Issues
-- 💬 Discussions: GitHub Discussions
-
----
-
-## Acknowledgments
-
-- **Groq** - Fast LLM inference platform
-- **Streamlit** - Rapid web app development
-- **Llama 3.3** - Open-source language model
-
----
-
-**Last Updated**: March 21, 2026  
-**Version**: 1.0.0
+If you use this project in production, rotate API keys regularly and avoid storing secrets directly in source files.

@@ -32,6 +32,7 @@ STRICT RULES:
 - Do NOT ask "What is X?"
 - All questions must be scenario-based
 - Keep each question clear and concise
+- Output must be in English only
 
 Output format ONLY:
 

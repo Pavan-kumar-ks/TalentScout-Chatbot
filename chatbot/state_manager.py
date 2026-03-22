@@ -1,252 +1,3 @@
-# from utils.validators import is_valid_email, is_valid_phone
-# from chatbot.question_generator import generate_questions
-# from chatbot.evaluator import evaluate_answer
-# from chatbot.followup_generator import generate_followup
-# from chatbot.llm_handler import call_llm
-# from utils.helpers import is_weak_answer
-# from utils.sentiment import analyze_sentiment
-# from utils.data_handler import save_candidate
-
-
-# def initialize_state():
-#     return {
-#         "stage": "greeting",
-#         "candidate": {
-#             "name": "",
-#             "email": "",
-#             "phone": "",
-#             "experience": "",
-#             "position": "",
-#             "location": "",
-#             "tech_stack": ""
-#         },
-#         "questions": [],
-#         "current_question_index": 0,
-#         "evaluations": []
-#     }
-
-
-# def extract_score(evaluation):
-#     try:
-#         return int(evaluation.split("Score:")[1].split("/")[0].strip())
-#     except:
-#         return 0
-
-
-# def calculate_final_score(evaluations):
-#     scores = [extract_score(e) for e in evaluations if "Score:" in e]
-#     return sum(scores) // len(scores) if scores else 0
-
-
-# def save_final_candidate(state):
-#     candidate = state["candidate"]
-#     final_score = calculate_final_score(state["evaluations"])
-
-#     candidate_data = {
-#         "name": candidate["name"],
-#         "email": candidate["email"],
-#         "phone": candidate["phone"],
-#         "experience": candidate["experience"],
-#         "position": candidate["position"],
-#         "location": candidate["location"],
-#         "tech_stack": candidate["tech_stack"],
-#         "final_score": final_score
-#     }
-
-#     save_candidate(candidate_data)
-
-
-# def get_next_step(state, user_input):
-#     stage = state["stage"]
-#     candidate = state["candidate"]
-#     user_input = user_input.strip()
-
-#     # EXIT
-#     if user_input.lower() in ["exit", "quit", "bye"]:
-#         save_final_candidate(state)
-#         state["stage"] = "end"
-#         return f"""
-# 👋 Interview ended.
-
-# Thank you, {candidate.get("name", "Candidate")}!
-
-# If you wish to continue later, feel free to restart.
-
-# Have a great day 🚀
-# """
-
-#     # =========================
-#     # GREETING
-#     # =========================
-#     if stage == "greeting":
-#         state["stage"] = "ask_name"
-#         return "👋 Welcome to TalentScout!\n\nWhat is your full name?"
-
-#     # =========================
-#     # INFO COLLECTION
-#     # =========================
-
-#     elif stage == "ask_name":
-#         candidate["name"] = user_input
-#         state["stage"] = "ask_email"
-#         return "📧 Enter your email:"
-
-#     elif stage == "ask_email":
-#         if not is_valid_email(user_input):
-#             return "❌ Invalid email format."
-#         candidate["email"] = user_input
-#         state["stage"] = "ask_phone"
-#         return "📱 Enter your phone number:"
-
-#     elif stage == "ask_phone":
-#         if not is_valid_phone(user_input):
-#             return "❌ Invalid phone number."
-#         candidate["phone"] = user_input
-#         state["stage"] = "ask_experience"
-#         return "💼 Years of experience?"
-
-#     elif stage == "ask_experience":
-#         if not user_input.isdigit():
-#             return "❌ Enter a valid number."
-#         candidate["experience"] = user_input
-#         state["stage"] = "ask_position"
-#         return "🎯 Desired role?"
-
-#     elif stage == "ask_position":
-#         candidate["position"] = user_input
-#         state["stage"] = "ask_location"
-#         return "📍 Current location?"
-
-#     elif stage == "ask_location":
-#         candidate["location"] = user_input
-#         state["stage"] = "ask_tech_stack"
-#         return "🧠 Enter your tech stack:"
-
-#     # =========================
-#     # QUESTION GENERATION
-#     # =========================
-
-#     elif stage == "ask_tech_stack":
-#         candidate["tech_stack"] = user_input
-
-#         questions = generate_questions(
-#             candidate["tech_stack"],
-#             candidate["experience"]
-#         )
-
-#         state["questions"] = questions
-#         state["current_question_index"] = 0
-#         state["stage"] = "ask_question"
-
-#         return f"🚀 Technical Round Begins\n\nQuestion 1:\n{questions[0]}"
-
-#     # =========================
-#     # MAIN QUESTION FLOW
-#     # =========================
-
-#     elif stage == "ask_question":
-#         idx = state["current_question_index"]
-#         current_question = state["questions"][idx]
-
-#         sentiment = analyze_sentiment(user_input)
-
-#         if is_weak_answer(user_input):
-#             explanation = call_llm(f"Explain simply:\n{current_question}")
-
-#             idx += 1
-#             if idx >= len(state["questions"]):
-#                 save_final_candidate(state)
-#                 state["stage"] = "end"
-#                 return f"""
-# 📘 Explanation:
-# {explanation}
-
-# 🎉 Interview Completed!
-
-# 🙏 Thank you, {candidate['name']}.
-
-# Our team will review your responses and contact you within 2–5 business days.
-# """
-
-#             state["current_question_index"] = idx
-#             return f"📘 Explanation:\n{explanation}\n\n➡️ Question {idx+1}:\n{state['questions'][idx]}"
-
-#         evaluation = evaluate_answer(current_question, user_input)
-#         state["evaluations"].append(evaluation)
-
-#         score = extract_score(evaluation)
-
-#         if score >= 7:
-#             tone = "✅ Strong answer\n"
-#         elif score >= 4:
-#             tone = "👍 Decent attempt\n"
-#         else:
-#             tone = "⚠️ Needs improvement\n"
-
-#         if "Irrelevant" in evaluation:
-#             followup = "Your answer seems unrelated. Try focusing on the problem."
-#         else:
-#             followup = generate_followup(current_question, user_input)
-
-#         state["stage"] = "followup"
-
-#         return f"{tone}\n🧠 {evaluation}\n\n🔎 {followup}"
-
-#     # =========================
-#     # FOLLOW-UP FLOW
-#     # =========================
-
-#     elif stage == "followup":
-#         idx = state["current_question_index"]
-#         current_question = state["questions"][idx]
-
-#         evaluation = evaluate_answer(current_question, user_input)
-
-#         idx += 1
-
-#         if idx >= len(state["questions"]):
-#             save_final_candidate(state)
-#             state["stage"] = "end"
-#             return f"""
-# 🧠 Follow-up Evaluation:
-# {evaluation}
-
-# 🎉 Interview Completed!
-
-# 📊 Final Score: {calculate_final_score(state["evaluations"])}/10
-
-# 🙏 Thank you, {candidate["name"]}, for participating.
-
-# 📌 Next Steps:
-# - Your responses will be reviewed by our team
-# - If shortlisted, you will be contacted for further rounds
-
-# ⏳ Expect an update within 2–5 business days.
-
-# Best of luck 🚀
-# """
-
-#         state["current_question_index"] = idx
-#         state["stage"] = "ask_question"
-
-#         return f"🧠 Follow-up Evaluation:\n{evaluation}\n\n➡️ Question {idx+1}:\n{state['questions'][idx]}"
-
-#     elif stage == "end":
-#         return "Conversation has ended."
-
-#     return "I didn't understand that. Please try again."
-
-
-
-
-
-
-
-
-
-
-
-
 from utils.validators import is_valid_email, is_valid_phone
 from chatbot.question_generator import generate_questions
 from chatbot.evaluator import evaluate_answer
@@ -255,12 +6,13 @@ from chatbot.llm_handler import call_llm
 from utils.helpers import is_weak_answer
 from utils.sentiment import analyze_sentiment
 from utils.data_handler import save_candidate
-from utils.translator import translate_to_english
+from utils.translator import normalize_language, translate_to_english, translate_to_language
 
 
 def initialize_state():
     return {
         "stage": "greeting",
+        "language": "en",
         "candidate": {
             "name": "",
             "email": "",
@@ -268,18 +20,18 @@ def initialize_state():
             "experience": "",
             "position": "",
             "location": "",
-            "tech_stack": ""
+            "tech_stack": "",
         },
         "questions": [],
         "current_question_index": 0,
-        "evaluations": []
+        "evaluations": [],
     }
 
 
 def extract_score(evaluation):
     try:
         return int(evaluation.split("Score:")[1].split("/")[0].strip())
-    except:
+    except Exception:
         return 0
 
 
@@ -288,8 +40,30 @@ def calculate_final_score(evaluations):
     return sum(scores) // len(scores) if scores else 0
 
 
+def get_language(state):
+    return normalize_language(state.get("language", "en"))
+
+
+def to_english_for_processing(state, text):
+    language = get_language(state)
+    text = (text or "").strip()
+    if not text:
+        return ""
+    if language == "en":
+        return text
+    return translate_to_english(text, src_lang=language)
+
+
+def to_user_language(state, english_text):
+    language = get_language(state)
+    if language == "en":
+        return english_text
+    return translate_to_language(english_text, language=language, src_lang="en")
+
+
 def save_final_candidate(state):
     candidate = state["candidate"]
+    language = get_language(state)
 
     candidate_data = {
         "name": candidate["name"],
@@ -299,7 +73,11 @@ def save_final_candidate(state):
         "position": candidate["position"],
         "location": candidate["location"],
         "tech_stack": candidate["tech_stack"],
-        "final_score": calculate_final_score(state["evaluations"])
+        "language": language,
+        "position_en": translate_to_english(candidate["position"], src_lang=language),
+        "location_en": translate_to_english(candidate["location"], src_lang=language),
+        "tech_stack_en": translate_to_english(candidate["tech_stack"], src_lang=language),
+        "final_score": calculate_final_score(state["evaluations"]),
     }
 
     save_candidate(candidate_data)
@@ -308,142 +86,147 @@ def save_final_candidate(state):
 def get_next_step(state, user_input):
     stage = state["stage"]
     candidate = state["candidate"]
+    raw_input = (user_input or "").strip()
+    processed_input = to_english_for_processing(state, raw_input)
 
-    # 🌍 Translate input
-    user_input = translate_to_english(user_input.strip())
-
-    # EXIT
-    if user_input.lower() in ["exit", "quit", "bye"]:
+    if processed_input.lower() in ["exit", "quit", "bye"]:
         save_final_candidate(state)
         state["stage"] = "end"
-        return "👋 Interview ended. Thank you!"
+        return to_user_language(state, "Interview ended. Thank you!")
 
-    # =========================
-    # GREETING
-    # =========================
     if stage == "greeting":
         state["stage"] = "ask_name"
-        return "👋 Welcome to TalentScout!\n\nWhat is your full name?"
+        return to_user_language(state, "Welcome to TalentScout!\n\nWhat is your full name?")
 
-    # =========================
-    # INFO COLLECTION
-    # =========================
-
-    elif stage == "ask_name":
-        candidate["name"] = user_input
+    if stage == "ask_name":
+        candidate["name"] = raw_input
         state["stage"] = "ask_email"
-        return f"Nice to meet you {candidate['name']}! 📧 Enter your email:"
+        english_response = f"Nice to meet you {candidate['name']}! Enter your email:"
+        return to_user_language(state, english_response)
 
-    elif stage == "ask_email":
-        if not is_valid_email(user_input):
-            return "❌ Invalid email."
-        candidate["email"] = user_input
+    if stage == "ask_email":
+        if not is_valid_email(raw_input):
+            return to_user_language(state, "Invalid email format. Please enter a valid email.")
+        candidate["email"] = raw_input
         state["stage"] = "ask_phone"
-        return "📱 Phone number?"
+        return to_user_language(state, "Enter your phone number (10 to 15 digits, optional +):")
 
-    elif stage == "ask_phone":
-        if not is_valid_phone(user_input):
-            return "❌ Invalid phone."
-        candidate["phone"] = user_input
+    if stage == "ask_phone":
+        if not is_valid_phone(raw_input):
+            return to_user_language(state, "Invalid phone number format. Please enter a valid number.")
+        candidate["phone"] = raw_input
         state["stage"] = "ask_experience"
-        return "💼 Years of experience?"
+        return to_user_language(state, "How many years of experience do you have?")
 
-    elif stage == "ask_experience":
-        if not user_input.isdigit():
-            return "❌ Enter valid number."
-        candidate["experience"] = user_input
+    if stage == "ask_experience":
+        if not processed_input.isdigit():
+            return to_user_language(state, "Please enter experience as a number.")
+        candidate["experience"] = processed_input
         state["stage"] = "ask_position"
-        return "🎯 Desired role?"
+        return to_user_language(state, "What role are you applying for?")
 
-    elif stage == "ask_position":
-        candidate["position"] = user_input
+    if stage == "ask_position":
+        candidate["position"] = raw_input
         state["stage"] = "ask_location"
-        return "📍 Location?"
+        return to_user_language(state, "What is your current location?")
 
-    elif stage == "ask_location":
-        candidate["location"] = user_input
+    if stage == "ask_location":
+        candidate["location"] = raw_input
         state["stage"] = "ask_tech_stack"
-        return "🧠 Tech stack?"
+        return to_user_language(state, "Enter your primary tech stack (comma separated):")
 
-    # =========================
-    # QUESTIONS
-    # =========================
+    if stage == "ask_tech_stack":
+        candidate["tech_stack"] = raw_input
 
-    elif stage == "ask_tech_stack":
-        candidate["tech_stack"] = user_input
-
-        questions = generate_questions(
-            candidate["tech_stack"],
-            candidate["experience"]
-        )
+        tech_stack_en = translate_to_english(raw_input, src_lang=get_language(state))
+        questions = generate_questions(tech_stack_en, candidate["experience"])
 
         state["questions"] = questions
         state["current_question_index"] = 0
         state["stage"] = "ask_question"
 
-        return f"🚀 Technical Round Begins\n\nQuestion 1:\n{questions[0]}"
+        english_response = f"Technical round begins.\n\nQuestion 1:\n{questions[0]}"
+        return to_user_language(state, english_response)
 
-    elif stage == "ask_question":
+    if stage == "ask_question":
         idx = state["current_question_index"]
         current_question = state["questions"][idx]
 
-        sentiment = analyze_sentiment(user_input)
+        sentiment = analyze_sentiment(processed_input)
 
-        # Weak answer
-        if is_weak_answer(user_input):
-            explanation = call_llm(f"Explain simply:\n{current_question}")
+        if is_weak_answer(processed_input):
+            explanation = call_llm(
+                f"Explain this interview question simply in English:\n\n{current_question}"
+            )
 
             idx += 1
             if idx >= len(state["questions"]):
                 save_final_candidate(state)
                 state["stage"] = "end"
-                return f"📘 {explanation}\n\n🎉 Interview Completed!"
+                english_response = f"Explanation:\n{explanation}\n\nInterview completed!"
+                return to_user_language(state, english_response)
 
             state["current_question_index"] = idx
-            return f"📘 {explanation}\n\n➡️ Question {idx+1}:\n{state['questions'][idx]}"
+            english_response = (
+                f"Explanation:\n{explanation}\n\n"
+                f"Question {idx + 1}:\n{state['questions'][idx]}"
+            )
+            return to_user_language(state, english_response)
 
-        # Evaluate
-        evaluation = evaluate_answer(current_question, user_input)
+        evaluation = evaluate_answer(current_question, processed_input)
         state["evaluations"].append(evaluation)
 
         score = extract_score(evaluation)
-
         if score >= 7:
-            tone = "✅ Strong answer\n"
+            tone = "Strong answer"
         elif score >= 4:
-            tone = "👍 Decent attempt\n"
+            tone = "Decent attempt"
         else:
-            tone = "⚠️ Needs improvement\n"
+            tone = "Needs improvement"
 
-        # Sentiment tone
         if sentiment == "negative":
-            tone += "No worries, keep going 👍\n"
+            tone += "\nNo worries, keep going."
 
         if "Irrelevant" in evaluation:
             followup = "Please focus on the question."
         else:
-            followup = generate_followup(current_question, user_input)
+            followup = generate_followup(current_question, processed_input)
 
         state["stage"] = "followup"
+        english_response = (
+            f"{tone}\n\nEvaluation:\n{evaluation}\n\nFollow-up:\n{followup}"
+        )
+        return to_user_language(state, english_response)
 
-        return f"{tone}\n🧠 {evaluation}\n\n🔎 {followup}"
-
-    elif stage == "followup":
+    if stage == "followup":
         idx = state["current_question_index"]
         current_question = state["questions"][idx]
 
-        evaluation = evaluate_answer(current_question, user_input)
+        evaluation = evaluate_answer(current_question, processed_input)
+        state["evaluations"].append(evaluation)
 
         idx += 1
 
         if idx >= len(state["questions"]):
             save_final_candidate(state)
             state["stage"] = "end"
-            return f"🧠 {evaluation}\n\n🎉 Interview Completed!"
+            final_score = calculate_final_score(state["evaluations"])
+            english_response = (
+                f"Follow-up evaluation:\n{evaluation}\n\n"
+                f"Interview completed!\nFinal score: {final_score}/10"
+            )
+            return to_user_language(state, english_response)
 
         state["current_question_index"] = idx
         state["stage"] = "ask_question"
 
-        return f"🧠 {evaluation}\n\n➡️ Question {idx+1}:\n{state['questions'][idx]}"
+        english_response = (
+            f"Follow-up evaluation:\n{evaluation}\n\n"
+            f"Question {idx + 1}:\n{state['questions'][idx]}"
+        )
+        return to_user_language(state, english_response)
 
-    return "I didn't understand. Try again."
+    if stage == "end":
+        return to_user_language(state, "Conversation has ended.")
+
+    return to_user_language(state, "I did not understand that. Please try again.")

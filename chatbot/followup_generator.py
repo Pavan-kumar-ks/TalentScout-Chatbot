@@ -20,6 +20,7 @@ Rules:
 - Max 1–2 lines
 - No long explanations
 - No labels like "Follow-up Question"
+- Use English only
 
 Example:
 "How would this work at scale?"

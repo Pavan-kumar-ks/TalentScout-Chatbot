@@ -37,5 +37,7 @@ Output STRICTLY:
 Score: <number>/10
 Relevance: <Relevant / Weakly Relevant / Irrelevant>
 Feedback: <2-3 lines explaining gaps>
+
+Use English only.
 """
     return call_llm(prompt)

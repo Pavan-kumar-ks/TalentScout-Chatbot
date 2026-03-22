@@ -3,12 +3,20 @@ services:
     name: talentscout-chatbot
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TRANSLATION_GROQ_API_KEY
+        sync: false
       - key: GROQ_MODEL
         value: llama-3.1-8b-instant
       - key: TRANSLATION_MODEL
         value: openai/gpt-oss-120b
+      - key: GROQ_TIMEOUT_SECONDS
+        value: "30"
+      - key: TRANSLATION_TIMEOUT_SECONDS
+        value: "20"
